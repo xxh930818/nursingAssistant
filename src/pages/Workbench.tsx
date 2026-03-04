@@ -3,17 +3,18 @@ import { User, Bell, AlertCircle, Timer, CheckCircle, ChevronRight } from "lucid
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { useApp } from "@/context/AppContext";
 
 export default function Workbench() {
   const navigate = useNavigate();
+  const { orders, getOrdersByStatus, updateOrderStatus, attendance, punchIn, getUnreadCount } = useApp();
   const [activeTab, setActiveTab] = useState("pending");
-  const [punchedIn, setPunchedIn] = useState(false);
   const [activeDate, setActiveDate] = useState(24);
 
   const tabs = [
-    { id: "pending", label: "待接收" },
-    { id: "serving", label: "服务中" },
-    { id: "completed", label: "已完成" },
+    { id: "pending", label: "待接收", count: getOrdersByStatus('pending').length },
+    { id: "serving", label: "服务中", count: getOrdersByStatus('serving').length },
+    { id: "completed", label: "已完成", count: getOrdersByStatus('completed').length },
   ];
 
   const dates = [
@@ -24,14 +25,25 @@ export default function Workbench() {
     { day: "周六", date: 28 },
   ];
 
-  const handlePunchIn = () => {
-    if (punchedIn) {
-      toast.info("您已经签到过了");
-      return;
-    }
-    setPunchedIn(true);
-    toast.success("晚班签到成功！");
+  // 获取今日考勤状态
+  const todayAttendance = attendance.filter(a => a.date === '2023-10-24');
+  const dayShiftCompleted = todayAttendance.some(a => a.shiftType === 'day' && a.status === 'completed');
+  const nightShiftCompleted = todayAttendance.some(a => a.shiftType === 'night' && a.status === 'completed');
+
+  // 获取当前显示的订单
+  const currentOrders = getOrdersByStatus(activeTab as 'pending' | 'serving' | 'completed');
+
+  const handlePunchIn = (shiftType: 'day' | 'night') => {
+    punchIn(shiftType);
+    toast.success(`${shiftType === 'day' ? '白班' : '晚班'}签到成功！`);
   };
+
+  const handleAcceptOrder = (orderId: string) => {
+    updateOrderStatus(orderId, 'serving');
+    toast.success('订单已接收');
+  };
+
+  const unreadCount = getUnreadCount();
 
   return (
     <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-white shadow-xl overflow-x-hidden">
@@ -47,11 +59,16 @@ export default function Workbench() {
           工作台
         </h2>
         <div className="flex w-10 items-center justify-end">
-          <button 
-            onClick={() => toast.info("暂无新通知")}
-            className="flex size-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
+          <button
+            onClick={() => navigate("/communication")}
+            className="relative flex size-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <div className="absolute -top-1 -right-1 size-5 flex items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold">
+                {unreadCount}
+              </div>
+            )}
           </button>
         </div>
       </div>
@@ -100,7 +117,7 @@ export default function Workbench() {
         </div>
 
         {/* Dispatch Reminder Card */}
-        {activeTab === "pending" && (
+        {activeTab === "pending" && currentOrders.length > 0 && (
           <div className="px-4 pb-4">
             <div className="flex flex-col items-stretch justify-start rounded-xl shadow-sm border border-slate-100 bg-white p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -109,9 +126,9 @@ export default function Workbench() {
               </div>
               <p className="text-slate-900 text-lg font-bold leading-tight mb-1">今日派单提醒</p>
               <div className="flex items-center justify-between gap-4">
-                <p className="text-slate-500 text-sm">您有 1 个待接收的居家养老服务订单，请尽快处理。</p>
+                <p className="text-slate-500 text-sm">您有 {currentOrders.length} 个待接收的居家养老服务订单，请尽快处理。</p>
                 <Link
-                  to="/order/1"
+                  to={`/order/${currentOrders[0].id}`}
                   className="shrink-0 flex items-center justify-center rounded-lg h-9 px-4 bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
                 >
                   立即查看
@@ -134,25 +151,34 @@ export default function Workbench() {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className={`bg-white p-3 rounded-lg shadow-sm ${dayShiftCompleted ? 'border-2 border-green-500/20' : ''}`}>
                 <p className="text-[10px] text-slate-400 font-bold mb-1">白班 (A)</p>
                 <p className="text-sm font-bold text-slate-700">08:00 - 20:00</p>
-                <div className="mt-2 flex items-center gap-1 text-green-500">
-                  <CheckCircle className="w-3 h-3" />
-                  <span className="text-[10px] font-bold">已签到 07:52</span>
-                </div>
-              </div>
-              <div className={`bg-white p-3 rounded-lg shadow-sm border-2 ${punchedIn ? 'border-green-500/20' : 'border-blue-600/20'}`}>
-                <p className="text-[10px] text-slate-400 font-bold mb-1">晚班 (N)</p>
-                <p className="text-sm font-bold text-slate-700">20:00 - 08:00</p>
-                {punchedIn ? (
+                {dayShiftCompleted ? (
                   <div className="mt-2 flex items-center gap-1 text-green-500">
                     <CheckCircle className="w-3 h-3" />
-                    <span className="text-[10px] font-bold">已签到 19:55</span>
+                    <span className="text-[10px] font-bold">已签到 07:52</span>
                   </div>
                 ) : (
-                  <button 
-                    onClick={handlePunchIn}
+                  <button
+                    onClick={() => handlePunchIn('day')}
+                    className="mt-2 w-full py-1 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded text-[10px] font-bold"
+                  >
+                    待签到
+                  </button>
+                )}
+              </div>
+              <div className={`bg-white p-3 rounded-lg shadow-sm ${nightShiftCompleted ? 'border-2 border-green-500/20' : 'border-2 border-blue-600/20'}`}>
+                <p className="text-[10px] text-slate-400 font-bold mb-1">晚班 (N)</p>
+                <p className="text-sm font-bold text-slate-700">20:00 - 08:00</p>
+                {nightShiftCompleted ? (
+                  <div className="mt-2 flex items-center gap-1 text-green-500">
+                    <CheckCircle className="w-3 h-3" />
+                    <span className="text-[10px] font-bold">已签到</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handlePunchIn('night')}
                     className="mt-2 w-full py-1 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded text-[10px] font-bold"
                   >
                     待签到
@@ -196,35 +222,29 @@ export default function Workbench() {
           <div className="space-y-3">
             {activeDate === 24 ? (
               <>
-                <Link
-                  to="/order/1"
-                  className="flex items-center gap-4 p-3 bg-white rounded-xl border-l-4 border-blue-600 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="text-center shrink-0">
-                    <p className="text-sm font-bold text-slate-800">09:30</p>
-                    <p className="text-[10px] text-slate-400">11:00</p>
+                {currentOrders.filter(order => order.scheduledTime.date === '2023-10-24').map(order => (
+                  <Link
+                    key={order.id}
+                    to={`/order/${order.id}`}
+                    className="flex items-center gap-4 p-3 bg-white rounded-xl border-l-4 border-blue-600 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="text-center shrink-0">
+                      <p className="text-sm font-bold text-slate-800">{order.scheduledTime.startTime}</p>
+                      <p className="text-[10px] text-slate-400">{order.scheduledTime.endTime}</p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-slate-800">{order.patient.name} - {order.type}</p>
+                      <p className="text-[10px] text-slate-500">{order.address}</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300" />
+                  </Link>
+                ))}
+                {currentOrders.filter(order => order.scheduledTime.date === '2023-10-24').length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                    <Timer className="w-12 h-12 mb-2 opacity-20" />
+                    <p className="text-sm">今天没有安排服务</p>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-800">张大爷 - 康复护理</p>
-                    <p className="text-[10px] text-slate-500">朝阳区幸福路22号</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300" />
-                </Link>
-
-                <div 
-                  onClick={() => toast.info("该服务尚未开始")}
-                  className="flex items-center gap-4 p-3 bg-white rounded-xl border-l-4 border-slate-200 shadow-sm opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                  <div className="text-center shrink-0">
-                    <p className="text-sm font-bold text-slate-800">14:00</p>
-                    <p className="text-[10px] text-slate-400">15:30</p>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-800">王阿姨 - 基础生命体征监测</p>
-                    <p className="text-[10px] text-slate-500">海淀区学院路15号</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300" />
-                </div>
+                )}
               </>
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-slate-400">

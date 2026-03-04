@@ -1,51 +1,12 @@
-import { useState } from "react";
 import { ArrowLeft, Bell, AlertTriangle, UserX, Users, Stethoscope, Building } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { useApp } from "@/context/AppContext";
 
 export default function Communication() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: "admin",
-      name: "医护主管 - 李医生",
-      time: "14:20",
-      content: "关于302病房的护理计划已更新，请查阅。",
-      unread: true,
-      avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200",
-      status: "online"
-    },
-    {
-      id: 2,
-      type: "family",
-      name: "王爷爷家属 (长女)",
-      time: "12:05",
-      content: "王爷爷今天胃口怎么样？中午吃了吗？",
-      unread: true,
-      unreadCount: 2,
-      avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200"
-    },
-    {
-      id: 3,
-      type: "system",
-      name: "行政管理中心",
-      time: "昨天",
-      content: "本周员工培训会议定于周五下午三点。",
-      unread: false,
-      icon: Building
-    },
-    {
-      id: 4,
-      type: "family",
-      name: "张奶奶家属 (次子)",
-      time: "星期一",
-      content: "谢谢您的细心照顾，我们下周来看她。",
-      unread: false,
-      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200"
-    }
-  ]);
+  const { messages, markAllMessagesAsRead, markMessageAsRead } = useApp();
 
   const handleSOS = () => {
     toast.error("已发送紧急求助信号！", {
@@ -60,13 +21,13 @@ export default function Communication() {
     });
   };
 
-  const markAllAsRead = () => {
-    setMessages(messages.map(m => ({ ...m, unread: false, unreadCount: 0 })));
+  const handleMarkAllAsRead = () => {
+    markAllMessagesAsRead();
     toast.success("已全部标记为已读");
   };
 
   const openChat = (id: number, name: string) => {
-    setMessages(messages.map(m => m.id === id ? { ...m, unread: false, unreadCount: 0 } : m));
+    markMessageAsRead(id);
     toast.info(`打开与 ${name} 的对话`);
   };
 
@@ -147,8 +108,8 @@ export default function Communication() {
           <h3 className="text-slate-900 text-base font-bold font-display px-1">
             消息列表
           </h3>
-          <button 
-            onClick={markAllAsRead}
+          <button
+            onClick={handleMarkAllAsRead}
             className="text-blue-600 text-xs font-semibold hover:underline"
           >
             标记已读
@@ -157,7 +118,7 @@ export default function Communication() {
 
         <div className="flex flex-col gap-0.5">
           {messages.map((msg) => (
-            <div 
+            <div
               key={msg.id}
               onClick={() => openChat(msg.id, msg.name)}
               className="flex gap-4 px-4 py-4 bg-white hover:bg-slate-50 cursor-pointer border-b border-slate-100 transition-colors"
@@ -171,10 +132,10 @@ export default function Communication() {
                   />
                 ) : msg.icon ? (
                   <div className="size-full rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600">
-                    <msg.icon className="w-6 h-6" />
+                    <Building className="w-6 h-6" />
                   </div>
                 ) : null}
-                
+
                 {msg.status === "online" && (
                   <div className="absolute bottom-0 right-0 size-3 rounded-full bg-green-500 border-2 border-white"></div>
                 )}

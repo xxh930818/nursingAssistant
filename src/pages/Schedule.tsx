@@ -3,9 +3,11 @@ import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, User, ChevronLeft, 
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { useApp } from "@/context/AppContext";
 
 export default function Schedule() {
   const navigate = useNavigate();
+  const { orders } = useApp();
   const [selectedDate, setSelectedDate] = useState(15);
   const [currentMonth, setCurrentMonth] = useState("2023年10月");
 
@@ -15,24 +17,13 @@ export default function Schedule() {
 
   const dates = Array.from({ length: 7 }, (_, i) => i + 12); // 12 to 18
 
-  const scheduleData = [
-    {
-      id: 1,
-      time: "09:30 - 11:00",
-      patient: "张建国",
-      type: "三级护理",
-      location: "朝阳区幸福路12号",
-      status: "pending",
-    },
-    {
-      id: 2,
-      time: "14:00 - 16:30",
-      patient: "李淑芬",
-      type: "康复训练",
-      location: "海淀区中关村南大街5号",
-      status: "completed",
-    },
-  ];
+  // 获取选中日期的订单
+  const getOrdersForDate = (date: number) => {
+    const dateStr = `2023-10-${date.toString().padStart(2, '0')}`;
+    return orders.filter(order => order.scheduledTime.date === dateStr);
+  };
+
+  const scheduleData = getOrdersForDate(selectedDate);
 
   return (
     <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-white shadow-xl overflow-x-hidden pb-20">
@@ -103,9 +94,9 @@ export default function Schedule() {
 
         {/* Schedule List */}
         <div className="p-4 space-y-4">
-          {selectedDate === 15 ? (
+          {scheduleData.length > 0 ? (
             scheduleData.map((item) => (
-              <div 
+              <div
                 key={item.id}
                 onClick={() => navigate(`/order/${item.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
@@ -113,29 +104,31 @@ export default function Schedule() {
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-600" />
-                    <span className="font-bold text-slate-900">{item.time}</span>
+                    <span className="font-bold text-slate-900">{item.scheduledTime.startTime} - {item.scheduledTime.endTime}</span>
                   </div>
                   <span className={`text-xs font-bold px-2 py-1 rounded-md ${
-                    item.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+                    item.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                    item.status === 'serving' ? 'bg-blue-100 text-blue-700' :
+                    'bg-green-100 text-green-700'
                   }`}>
-                    {item.status === 'pending' ? '待服务' : '已完成'}
+                    {item.status === 'pending' ? '待服务' : item.status === 'serving' ? '服务中' : '已完成'}
                   </span>
                 </div>
-                
+
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-sm">
                     <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-700 font-medium">{item.patient}</span>
+                    <span className="text-slate-700 font-medium">{item.patient.name}</span>
                     <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{item.type}</span>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                    <span className="text-slate-600 line-clamp-2">{item.location}</span>
+                    <span className="text-slate-600 line-clamp-2">{item.address}</span>
                   </div>
                 </div>
 
                 <div className="flex gap-2 pt-3 border-t border-slate-50">
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleAction("联系家属");
@@ -144,7 +137,7 @@ export default function Schedule() {
                   >
                     联系家属
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.status === 'pending') {
@@ -154,8 +147,8 @@ export default function Schedule() {
                       }
                     }}
                     className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${
-                      item.status === 'pending' 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      item.status === 'pending'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                     }`}
                   >

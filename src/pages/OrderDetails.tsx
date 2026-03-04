@@ -1,22 +1,89 @@
 import { useState } from "react";
 import { ArrowLeft, MapPin, Camera, History, Activity, Utensils, Pill, Navigation, ChevronRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useApp } from "@/context/AppContext";
 
 export default function OrderDetails() {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"pending" | "serving" | "completed">("pending");
+  const { id } = useParams<{ id: string }>();
+  const { getOrderById, updateOrderStatus, addVitalSigns, addMealRecord, addMedicationRecord } = useApp();
+
+  const order = getOrderById(id || '1');
+
+  if (!order) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>订单不存在</p>
+      </div>
+    );
+  }
+
+  const [status, setStatus] = useState<"pending" | "serving" | "completed">(order.status);
 
   const handleAction = (action: string) => {
-    toast.info(`正在打开${action}...`);
+    switch(action) {
+      case "位置打卡":
+        toast.success("位置打卡成功");
+        break;
+      case "拍照上传":
+        toast.success("照片已上传");
+        break;
+      case "打卡记录":
+        toast.info("查看打卡记录");
+        break;
+      case "生命体征记录":
+        // 模拟添加生命体征记录
+        const newVitalSigns = {
+          id: Date.now().toString(),
+          orderId: order.id,
+          timestamp: new Date().toISOString(),
+          bloodPressure: { systolic: 120, diastolic: 80 },
+          heartRate: 72,
+          temperature: 36.5,
+          oxygenSaturation: 98
+        };
+        addVitalSigns(newVitalSigns);
+        toast.success("生命体征记录已保存");
+        break;
+      case "饮食进食记录":
+        const newMealRecord = {
+          id: Date.now().toString(),
+          orderId: order.id,
+          timestamp: new Date().toISOString(),
+          mealType: 'breakfast' as const,
+          foodItems: ['粥', '鸡蛋'],
+          intakeAmount: 'full' as const,
+          appetite: 'good' as const
+        };
+        addMealRecord(newMealRecord);
+        toast.success("饮食记录已保存");
+        break;
+      case "用药记录":
+        const newMedicationRecord = {
+          id: Date.now().toString(),
+          orderId: order.id,
+          timestamp: new Date().toISOString(),
+          medicationName: '常规药物',
+          dosage: '10mg',
+          administered: true
+        };
+        addMedicationRecord(newMedicationRecord);
+        toast.success("用药记录已保存");
+        break;
+      default:
+        toast.info(`正在打开${action}...`);
+    }
   };
 
   const handleCheckIn = () => {
     if (status === "pending") {
       setStatus("serving");
+      updateOrderStatus(order.id, "serving");
       toast.success("签到成功，服务已开始");
     } else if (status === "serving") {
       setStatus("completed");
+      updateOrderStatus(order.id, "completed");
       toast.success("服务已完成");
       setTimeout(() => navigate("/"), 1500);
     }
@@ -49,13 +116,12 @@ export default function OrderDetails() {
               <div
                 className="size-16 rounded-full bg-cover bg-center border-2 border-blue-600/20"
                 style={{
-                  backgroundImage:
-                    'url("https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=200")',
+                  backgroundImage: `url("${order.patient.avatar}")`,
                 }}
               ></div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold text-slate-900">张建国</h3>
+                  <h3 className="text-xl font-bold text-slate-900">{order.patient.name}</h3>
                   {status === "serving" && (
                     <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-bold animate-pulse">
                       服务中
@@ -64,10 +130,10 @@ export default function OrderDetails() {
                 </div>
                 <div className="flex gap-2 mt-1">
                   <span className="px-2 py-0.5 rounded bg-blue-600/10 text-blue-600 text-xs font-semibold">
-                    72岁
+                    {order.patient.age}岁
                   </span>
                   <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold">
-                    三级护理
+                    {order.patient.nursingLevel}
                   </span>
                 </div>
               </div>
@@ -76,11 +142,11 @@ export default function OrderDetails() {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
               <div>
                 <p className="text-slate-500 text-xs">服务地点</p>
-                <p className="text-sm font-medium mt-0.5">朝阳区幸福路12号</p>
+                <p className="text-sm font-medium mt-0.5">{order.address}</p>
               </div>
               <div>
                 <p className="text-slate-500 text-xs">计划时间</p>
-                <p className="text-sm font-medium mt-0.5">今天 09:30 - 11:00</p>
+                <p className="text-sm font-medium mt-0.5">今天 {order.scheduledTime.startTime} - {order.scheduledTime.endTime}</p>
               </div>
             </div>
           </div>
