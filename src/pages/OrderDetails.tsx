@@ -156,26 +156,26 @@ export default function OrderDetails() {
         <div className="px-4 py-2">
           <h3 className="text-base font-bold mb-3">服务签到</h3>
           <div className="grid grid-cols-3 gap-3">
-            <button 
+            <button
               onClick={() => handleAction("位置打卡")}
-              className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 transition-colors active:scale-95"
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-blue-50 border-2 border-blue-200 shadow-sm hover:bg-blue-100 hover:border-blue-300 transition-all active:scale-95"
             >
-              <MapPin className="text-blue-600 w-6 h-6" />
-              <span className="text-xs font-medium">位置打卡</span>
+              <MapPin className="text-blue-600 w-7 h-7" />
+              <span className="text-xs font-bold text-blue-700">位置打卡</span>
             </button>
-            <button 
+            <button
               onClick={() => handleAction("拍照上传")}
-              className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 transition-colors active:scale-95"
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-green-50 border-2 border-green-200 shadow-sm hover:bg-green-100 hover:border-green-300 transition-all active:scale-95"
             >
-              <Camera className="text-blue-600 w-6 h-6" />
-              <span className="text-xs font-medium">拍照上传</span>
+              <Camera className="text-green-600 w-7 h-7" />
+              <span className="text-xs font-bold text-green-700">拍照上传</span>
             </button>
-            <button 
+            <button
               onClick={() => handleAction("打卡记录")}
-              className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 transition-colors active:scale-95"
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-purple-50 border-2 border-purple-200 shadow-sm hover:bg-purple-100 hover:border-purple-300 transition-all active:scale-95"
             >
-              <History className="text-blue-600 w-6 h-6" />
-              <span className="text-xs font-medium">打卡记录</span>
+              <History className="text-purple-600 w-7 h-7" />
+              <span className="text-xs font-bold text-purple-700">打卡记录</span>
             </button>
           </div>
         </div>
@@ -184,9 +184,9 @@ export default function OrderDetails() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-base font-bold">护理记录单</h3>
-            <button 
+            <button
               onClick={() => handleAction("全部记录单")}
-              className="text-xs text-blue-600 font-medium hover:underline"
+              className="text-xs text-blue-600 font-bold hover:underline"
             >
               查看全部
             </button>
@@ -194,49 +194,49 @@ export default function OrderDetails() {
 
           <div className="space-y-3">
             {/* Form Item 1 */}
-            <div 
+            <button
               onClick={() => handleAction("生命体征记录")}
-              className="flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border-2 border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
             >
-              <div className="size-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Activity className="text-blue-600 w-5 h-5" />
+              <div className="size-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Activity className="text-blue-600 w-6 h-6" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">生命体征记录</p>
-                <p className="text-xs text-slate-500">测量血压、体温、脉搏</p>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-slate-900">生命体征记录</p>
+                <p className="text-xs text-slate-500 mt-0.5">测量血压、体温、脉搏</p>
               </div>
-              <ChevronRight className="text-slate-300 w-5 h-5" />
-            </div>
+              <ChevronRight className="text-slate-400 w-5 h-5" />
+            </button>
 
             {/* Form Item 2 */}
-            <div 
+            <button
               onClick={() => handleAction("饮食进食记录")}
-              className="flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border-2 border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-green-300 transition-all"
             >
-              <div className="size-10 rounded-lg bg-green-50 flex items-center justify-center">
-                <Utensils className="text-green-600 w-5 h-5" />
+              <div className="size-12 rounded-xl bg-green-100 flex items-center justify-center">
+                <Utensils className="text-green-600 w-6 h-6" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">饮食进食记录</p>
-                <p className="text-xs text-slate-500">记录早餐/午餐摄入情况</p>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-slate-900">饮食进食记录</p>
+                <p className="text-xs text-slate-500 mt-0.5">记录早餐/午餐摄入情况</p>
               </div>
-              <ChevronRight className="text-slate-300 w-5 h-5" />
-            </div>
+              <ChevronRight className="text-slate-400 w-5 h-5" />
+            </button>
 
             {/* Form Item 3 */}
-            <div 
+            <button
               onClick={() => handleAction("用药记录")}
-              className="flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border-2 border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-purple-300 transition-all"
             >
-              <div className="size-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                <Pill className="text-purple-600 w-5 h-5" />
+              <div className="size-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                <Pill className="text-purple-600 w-6 h-6" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">用药记录</p>
-                <p className="text-xs text-slate-500">待记录（上次 08:00）</p>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-slate-900">用药记录</p>
+                <p className="text-xs text-slate-500 mt-0.5">待记录（上次 08:00）</p>
               </div>
-              <ChevronRight className="text-slate-300 w-5 h-5" />
-            </div>
+              <ChevronRight className="text-slate-400 w-5 h-5" />
+            </button>
           </div>
         </div>
 

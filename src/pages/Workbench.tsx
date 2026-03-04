@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { User, Bell, AlertCircle, Timer, CheckCircle, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -16,6 +16,13 @@ export default function Workbench() {
     { id: "serving", label: "服务中", count: getOrdersByStatus('serving').length },
     { id: "completed", label: "已完成", count: getOrdersByStatus('completed').length },
   ];
+
+  // 自动选择有待订单的标签
+  React.useEffect(() => {
+    if (getOrdersByStatus('pending').length > 0 && activeTab !== 'pending') {
+      setActiveTab('pending');
+    }
+  }, []);
 
   const dates = [
     { day: "周二", date: 24 },
@@ -86,7 +93,18 @@ export default function Workbench() {
                   : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
             >
-              <p className="text-sm font-bold">{tab.label}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-bold">{tab.label}</p>
+                {tab.count > 0 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    activeTab === tab.id
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </div>
             </button>
           ))}
         </div>
@@ -220,36 +238,39 @@ export default function Workbench() {
           </div>
 
           <div className="space-y-3">
-            {activeDate === 24 ? (
-              <>
-                {currentOrders.filter(order => order.scheduledTime.date === '2023-10-24').map(order => (
-                  <Link
-                    key={order.id}
-                    to={`/order/${order.id}`}
-                    className="flex items-center gap-4 p-3 bg-white rounded-xl border-l-4 border-blue-600 shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="text-center shrink-0">
-                      <p className="text-sm font-bold text-slate-800">{order.scheduledTime.startTime}</p>
-                      <p className="text-[10px] text-slate-400">{order.scheduledTime.endTime}</p>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-slate-800">{order.patient.name} - {order.type}</p>
-                      <p className="text-[10px] text-slate-500">{order.address}</p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-300" />
-                  </Link>
-                ))}
-                {currentOrders.filter(order => order.scheduledTime.date === '2023-10-24').length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-                    <Timer className="w-12 h-12 mb-2 opacity-20" />
-                    <p className="text-sm">今天没有安排服务</p>
+            {/* 显示当前选中标签的所有订单 */}
+            {currentOrders.length > 0 ? (
+              currentOrders.map(order => (
+                <Link
+                  key={order.id}
+                  to={`/order/${order.id}`}
+                  className="flex items-center gap-4 p-3 bg-white rounded-xl border-l-4 border-blue-600 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                >
+                  <div className="text-center shrink-0">
+                    <p className="text-sm font-bold text-slate-800">{order.scheduledTime.startTime}</p>
+                    <p className="text-[10px] text-slate-400">{order.scheduledTime.endTime}</p>
                   </div>
-                )}
-              </>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-slate-800">{order.patient.name} - {order.type}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded ${
+                        order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                        order.status === 'serving' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {order.status === 'pending' ? '待接收' : order.status === 'serving' ? '服务中' : '已完成'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">{order.address}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{order.scheduledTime.date}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                </Link>
+              ))
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-slate-400">
                 <Timer className="w-12 h-12 mb-2 opacity-20" />
-                <p className="text-sm">这一天没有安排服务</p>
+                <p className="text-sm">该状态下暂无订单</p>
               </div>
             )}
           </div>
